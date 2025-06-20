@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOC247 - Robot Doctor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #e8f0fe;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #3367d6;
+    }
+    button, input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+    .section {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background: #f9f9f9;
+    }
+    .section h3 {
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DOC247</h1>
+
+<!-- <button onclick="startVoiceInteraction()">🎤 Press to Speak with DOC247</button>      -->
+
+    <form id="symptomForm" onsubmit="processForm(event)">
+      <h2 for="symptoms">Describe how you feel, Please!</h2>
+      <textarea id="symptoms" placeholder="e.g. I feel tired and have a headache..."></textarea>
+
+      <label for="temperature">Temperature (°C):</label>
+      <input type="text" id="temperature" placeholder="e.g. 37.5">
+
+      <label for="bpm">BPM (Heart Rate):</label>
+      <input type="text" id="bpm" placeholder="e.g. 75">
+
+      <label for="cbc">CBC (Complete Blood Count):</label>
+      <input type="text" id="cbc" placeholder="e.g. Normal">
+
+      <button type="submit">Robot Diagnose</button>
+    </form>
+
+    <div class="section" id="diseaseSection">
+      <h3>Disease:</h3>
+      <p id="diseaseOutput">Awaiting input...</p>
+    </div>
+
+    <div class="section" id="reportSection">
+      <h3>Medical Report:</h3>
+      <p id="reportOutput">Awaiting input...</p>
+    </div>
+  </div>
+
+  <script>
+    function startVoiceInteraction() {
+      alert("Voice interaction is handled by the Python backend. Press the spacebar to begin talking.");
+    }
+
+    async function processForm(event) {
+      event.preventDefault();
+
+      const symptoms = document.getElementById("symptoms").value;
+      const temperature = document.getElementById("temperature").value;
+      const bpm = document.getElementById("bpm").value;
+      const cbc = document.getElementById("cbc").value;
+
+      const userInput = `Patient reports: ${symptoms}.
+Vital Signs - Temperature: ${temperature} °C, Heart Rate: ${bpm} bpm, CBC: ${cbc}.`;
+
+      const response = await fetch("http://localhost:8000/diagnose", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: userInput })
+      });
+
+      const result = await response.json();
+      const output = result.answer;
+
+      const [disease, ...reportParts] = output.split("Medical Report:");
+      const diseaseText = disease.trim();
+      const reportText = reportParts.join("Medical Report:").trim();
+
+      document.getElementById("diseaseOutput").innerText = diseaseText;
+      document.getElementById("reportOutput").innerText = reportText;
+
+      // Text-to-Speech automatic playback 
+      const ttsResponse = await fetch("http://localhost:8000/text-to-speech", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: `${diseaseText}. Medical Report: ${reportText}` })
+      });
+
+      const audioBlob = await ttsResponse.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audio.play();
+    }
+  </script>
+</body>
+</html>
