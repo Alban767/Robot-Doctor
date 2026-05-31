@@ -1,3 +1,3 @@
-#My first github project
+#DOC247 version 1.0
 It is a project about DOC247. It is a robot doctor and works as a professional medical assistant. 
 I published this project directly in Visual Stidio Code
